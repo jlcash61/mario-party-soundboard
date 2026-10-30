@@ -1,9 +1,14 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#e83b39"><meta name="apple-mobile-web-app-capable" content="yes"><link rel="manifest" href="./manifest.webmanifest"><title>Mario Party Soundboard</title><style>
 :root{font-family:system-ui,-apple-system,sans-serif;color:#fff;background:#121933}*{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(circle at 40% -15%,#385aab,#121933 70%)}main{max-width:650px;margin:auto;padding:20px 14px 35px}header{text-align:center}h1{font-size:clamp(30px,8vw,46px);margin:14px 0 2px;color:#ffdc42;text-shadow:3px 4px #a21d1c;letter-spacing:1px}.hat{font-size:50px;filter:drop-shadow(0 5px #0005)}.sub{opacity:.85;margin:5px 0 18px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.sound{border:3px solid #fff3;border-bottom:7px solid #0005;background:var(--bg);border-radius:18px;color:white;min-height:119px;cursor:pointer;box-shadow:0 7px 15px #0004;touch-action:manipulation;transition:transform .08s;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;font-weight:850;font-size:17px;text-shadow:0 2px #0007}.sound:active,.sound.playing{transform:translateY(5px) scale(.97);border-bottom-width:3px}.emoji{font-size:39px;text-shadow:none}.settings{display:flex;gap:9px;align-items:center;justify-content:center;margin:19px auto 8px;flex-wrap:wrap}.settings label{font-size:14px;background:#ffffff15;border:1px solid #ffffff30;border-radius:25px;padding:10px 13px}.settings input{accent-color:#fadb37}footer{text-align:center;color:#b9c2db;font-size:12px;line-height:1.5;margin-top:16px}.notice{text-align:center;color:#ffe075;font-size:13px;min-height:20px}
-</style></head><body><main><header><div class="hat">🍄</div><h1>SUPER PARTY!</h1><p class="sub">Tap a button. Make an entrance. Wahoo!</p></header><section id="grid" class="grid" aria-label="Sound effects"></section><div class="settings"><label><input id="classic" type="checkbox" checked> Classic game recordings (internet)</label><label><input id="volume" type="range" min="0" max="100" value="95"> Volume</label></div><p class="notice" id="status" role="status">Offline 8-bit backup built in.</p><footer>Unofficial fan soundboard. Classic clips © their respective owners.<br>Install from your browser menu → Add to Home screen.</footer></main>
+</style></head><body><main><header><div class="hat">🍄</div><h1>SUPER PARTY!</h1><p class="sub">Tap a button. Make an entrance. Wahoo!</p></header><section id="grid" class="grid" aria-label="Sound effects"></section><div class="settings"><label><input id="classic" type="checkbox" checked> Classic game recordings (internet)</label><label><input id="volume" type="range" min="0" max="100" value="95"> Volume</label></div><p class="notice" id="status" role="status">8-bit backup works offline; voice clips need internet.</p><footer>Unofficial fan soundboard. Classic clips © their respective owners.<br>Install from your browser menu → Add to Home screen.</footer></main>
 <script>
 const sounds=[
+["It's-a me, Mario!","🎤","#e83b39","https://raw.githubusercontent.com/3kh0/soundboard/main/sounds/mario.mp3","voice","https://themushroomkingdom.net/sounds/wav/sm64/sm64_mario_its_me.wav"],
+["Peach: Mario!","👸","#e75e9a","https://themushroomkingdom.net/sounds/wav/sm64/sm64_peach_mario_2.wav","voice"],
+["Mario: Here we go!","❤️","#d23e4e","https://themushroomkingdom.net/sounds/wav/sm64/sm64_mario_here_we_go.wav","voice"],
+["Mario: Let's-a go!","⭐","#2877bc","https://themushroomkingdom.net/sounds/wav/sm64/sm64_mario_lets_go.wav","voice"],
+["Peach's Invitation","💌","#ba59bc","https://themushroomkingdom.net/sounds/wav/sm64/sm64_peach_letter.wav","voice"],
 ['Coin','🪙','#e5a500','SMB_Coin.oga','coin'],
 ['Jump','🦘','#2591e0','SMB_Jump_Small.oga','jump'],
 ['Power Up','🍄','#dc4041','SMB_Power_Up.oga','power'],
@@ -18,6 +23,28 @@ const sounds=[
 const grid=document.getElementById('grid'),status=document.getElementById('status'),classic=document.getElementById('classic'),vol=document.getElementById('volume');
 let ctx; function tone(f,d=.08,shape='square',gain=.12,delay=0){ctx??=new (window.AudioContext||window.webkitAudioContext)();let t=ctx.currentTime+delay,o=ctx.createOscillator(),g=ctx.createGain();o.type=shape;o.frequency.setValueAtTime(Math.max(30,f),t);g.gain.setValueAtTime(gain*vol.value/100,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+d+.02)}
 function retro(k){let melody={coin:[988,1318],jump:[330,440,660],power:[392,494,587,784,988,1175,1568],oneup:[659,784,1046,1318,1568],bump:[210,120],fire:[880,440,220],down:[784,523,392,262],flag:[523,659,784,1046],pause:[784,523],item:[440,660,880]}[k]||[440];melody.forEach((n,i)=>tone(n,k==='power'?.12:.09,'square',.12,i*(k==='power'?.105:.075)))}
-let current;function play(s,button){button.classList.add('playing');setTimeout(()=>button.classList.remove('playing'),260);if(current){current.pause();current=null}const backup=()=>{retro(s[4]);status.textContent='Playing built-in 8-bit sound'};if(!classic.checked){backup();return}const audio=new Audio('https://www.mariowiki.com/Special:Redirect/file/'+encodeURIComponent(s[3]));audio.volume=vol.value/100;current=audio;let didFallback=false;const fail=()=>{if(!didFallback){didFallback=true;backup()}};audio.onerror=fail;audio.play().then(()=>{status.textContent='Playing classic game sound'}).catch(fail);setTimeout(()=>{if(audio.readyState<2&&current===audio){audio.pause();fail()}},1600)}
-sounds.forEach(s=>{const b=document.createElement('button');b.className='sound';b.style.setProperty('--bg',s[2]);b.innerHTML='<span class="emoji">'+s[1]+'</span><span>'+s[0]+'</span>';b.addEventListener('click',()=>play(s,b));grid.append(b)});if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+let current;
+function play(s,button){
+  button.classList.add('playing');setTimeout(()=>button.classList.remove('playing'),300);
+  if(current){current.pause();current=null}
+  if(s[4]!=='voice'&&!classic.checked){retro(s[4]);status.textContent='Playing 8-bit sound';return}
+  const sources=s[4]==='voice'?[s[3],...(s[5]?[s[5]]:[])]:['https://www.mariowiki.com/Special:Redirect/file/'+encodeURIComponent(s[3])];
+  let index=0,finished=false;
+  const fallback=()=>{
+    if(finished)return;
+    if(++index<sources.length){attempt();return}
+    finished=true;
+    if(s[4]==='voice'){status.textContent='Voice audio unavailable. Check connection and try again.'}
+    else {retro(s[4]);status.textContent='Playing built-in 8-bit backup'}
+  };
+  const attempt=()=>{
+    const audio=new Audio(); current=audio;audio.preload='auto';audio.volume=vol.value/100;
+    audio.addEventListener('error',fallback,{once:true});
+    audio.addEventListener('playing',()=>{finished=true;status.textContent='Playing '+s[0]},{once:true});
+    audio.src=sources[index];
+    const p=audio.play();if(p&&p.catch)p.catch(fallback);
+  };
+  attempt();
+}
+sounds.forEach(s=>{const b=document.createElement('button');b.className='sound';if(s[4]==='voice')b.style.minHeight='108px';b.style.setProperty('--bg',s[2]);b.innerHTML='<span class="emoji">'+s[1]+'</span><span>'+s[0]+'</span>';b.addEventListener('click',()=>play(s,b));grid.append(b)});if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script></body></html>
